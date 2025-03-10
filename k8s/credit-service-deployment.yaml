@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: credit-service-api
+  labels:
+    app: credit-service-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: credit-service-api
+  template:
+    metadata:
+      labels:
+        app: credit-service-api
+    spec:
+      containers:
+      - name: credit-service-api
+        image: your-registry/credit_service:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://user:password@postgresql-credit:5432/credit_db"
+        - name: BROKER_URL
+          value: "amqp://guest:guest@rabbitmq:5672//"

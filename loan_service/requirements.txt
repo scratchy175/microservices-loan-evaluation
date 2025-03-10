@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pika
+jinja2
+aiofiles

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Demande de prêt</title>
+</head>
+<body>
+  <h1>Formulaire de demande de prêt</h1>
+  <form action="/loans" method="post">
+    <label>Nom du client :</label>
+    <input type="text" name="client_name" required /><br/><br/>
+    
+    <label>Montant demandé :</label>
+    <input type="number" name="amount" step="0.01" required /><br/><br/>
+    
+    <label>Adresse du bien :</label>
+    <input type="text" name="property_address" required /><br/><br/>
+    
+    <label>Revenu annuel :</label>
+    <input type="number" name="annual_income" step="0.01" required /><br/><br/>
+    
+    <label>Dette actuelle :</label>
+    <input type="number" name="current_debt" step="0.01" required /><br/><br/>
+    
+    <label>Surface du bien (m²) :</label>
+    <input type="number" name="area" step="0.01" required /><br/><br/>
+    
+    <label>Localisation :</label>
+    <select name="location">
+      <option value="centre">Centre</option>
+      <option value="banlieue">Banlieue</option>
+      <option value="standard">Standard</option>
+    </select><br/><br/>
+    
+    <label>Condition (0 à 1) :</label>
+    <input type="number" name="condition" step="0.01" min="0" max="1" required /><br/><br/>
+    
+    <label>Âge du bien (années) :</label>
+    <input type="number" name="age" required /><br/><br/>
+    
+    <button type="submit">Envoyer la demande</button>
+  </form>
+</body>
+</html>

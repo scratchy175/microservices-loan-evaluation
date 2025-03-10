@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service-consumer
+  labels:
+    app: notification-service-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service-consumer
+  template:
+    metadata:
+      labels:
+        app: notification-service-consumer
+    spec:
+      containers:
+      - name: notification-service-consumer
+        image: your-registry/notification_service:latest
+        command: ["python", "consumer.py"]
+        env:
+        - name: BROKER_URL
+          value: "amqp://guest:guest@rabbitmq:5672//"

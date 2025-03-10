@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-service
+  labels:
+    app: loan-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loan-service
+  template:
+    metadata:
+      labels:
+        app: loan-service
+    spec:
+      containers:
+      - name: loan-service
+        image: your-registry/loan_service:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: BROKER_URL
+          value: "amqp://guest:guest@rabbitmq:5672//"

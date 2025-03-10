@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: property-service-consumer
+  labels:
+    app: property-service-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: property-service-consumer
+  template:
+    metadata:
+      labels:
+        app: property-service-consumer
+    spec:
+      containers:
+      - name: property-service-consumer
+        image: your-registry/property_service:latest
+        command: ["python", "consumer.py"]
+        env:
+        - name: BROKER_URL
+          value: "amqp://guest:guest@rabbitmq:5672//"

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service-api
+  labels:
+    app: notification-service-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service-api
+  template:
+    metadata:
+      labels:
+        app: notification-service-api
+    spec:
+      containers:
+      - name: notification-service-api
+        image: your-registry/notification_service:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: BROKER_URL
+          value: "amqp://guest:guest@rabbitmq:5672//"
