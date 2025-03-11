@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower
+  labels:
+    app: flower
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flower
+  template:
+    metadata:
+      labels:
+        app: flower
+    spec:
+      containers:
+      - name: flower
+        image: mher/flower
+        ports:
+        - containerPort: 5555
+        env:
+        - name: CELERY_BROKER_URL
+          value: "amqp://guest:guest@rabbitmq:5672//"
+        - name: FLOWER_PORT
+          value: "5555"
+        - name: FLOWER_BASIC_AUTH
+          value: "admin:admin"  # Change this in production
+        - name: FLOWER_PERSISTENT
+          value: "True"
+        - name: FLOWER_DB
+          value: "flower.db"
+        - name: FLOWER_MAX_TASKS
+          value: "10000"
+        - name: FLOWER_STATE_SAVE_INTERVAL
+          value: "60000"  # Save state every minute
+        volumeMounts:
+        - name: flower-data
+          mountPath: /data
+      volumes:
+      - name: flower-data
+        persistentVolumeClaim:
+          claimName: flower-pvc 

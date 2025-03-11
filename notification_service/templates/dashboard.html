@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Processing Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Loan Processing Dashboard</h1>
+        
+        <!-- Real-time Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-2">Active Loans</h3>
+                <p id="active-loans" class="text-3xl font-bold text-blue-600">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-2">Approved</h3>
+                <p id="approved-loans" class="text-3xl font-bold text-green-600">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-2">Rejected</h3>
+                <p id="rejected-loans" class="text-3xl font-bold text-red-600">0</p>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Recent Activities</h2>
+            <div id="activities" class="space-y-4">
+                <!-- Activities will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Loan Status Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Credit Score</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property Value</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Update</th>
+                    </tr>
+                </thead>
+                <tbody id="loan-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Loan entries will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        const ws = new WebSocket(`ws://${window.location.host}/ws`);
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            updateDashboard(data);
+        };
+
+        // SSE connection for fallback
+        const evtSource = new EventSource("/sse");
+        evtSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            updateDashboard(data);
+        };
+
+        // Dashboard state
+        let stats = {
+            active: 0,
+            approved: 0,
+            rejected: 0,
+            loans: new Map()
+        };
+
+        function updateDashboard(data) {
+            // Update stats
+            if (data.event_type === "loan_created") {
+                stats.active++;
+            } else if (data.event_type === "loan_approved") {
+                stats.approved++;
+                stats.active--;
+            } else if (data.event_type === "loan_rejected") {
+                stats.rejected++;
+                stats.active--;
+            }
+
+            // Update counters
+            document.getElementById("active-loans").textContent = stats.active;
+            document.getElementById("approved-loans").textContent = stats.approved;
+            document.getElementById("rejected-loans").textContent = stats.rejected;
+
+            // Add to activities
+            const activity = document.createElement("div");
+            activity.className = "flex items-center space-x-4";
+            activity.innerHTML = `
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-900">${data.event_type}</p>
+                    <p class="text-sm text-gray-500">Loan ID: ${data.loan_id}</p>
+                </div>
+                <div class="text-sm text-gray-500">${new Date().toLocaleTimeString()}</div>
+            `;
+            
+            const activities = document.getElementById("activities");
+            activities.insertBefore(activity, activities.firstChild);
+            if (activities.children.length > 10) {
+                activities.removeChild(activities.lastChild);
+            }
+
+            // Update loan table
+            updateLoanTable(data);
+        }
+
+        function updateLoanTable(data) {
+            const tableBody = document.getElementById("loan-table-body");
+            const loanId = data.loan_id;
+            
+            let row = document.getElementById(`loan-${loanId}`);
+            if (!row) {
+                row = document.createElement("tr");
+                row.id = `loan-${loanId}`;
+                tableBody.insertBefore(row, tableBody.firstChild);
+            }
+
+            const status = data.event_type.replace(/_/g, " ");
+            const creditScore = data.credit_score || "-";
+            const propertyValue = data.estimated_value || "-";
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${loanId}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${status}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${creditScore}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${propertyValue}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date().toLocaleTimeString()}</td>
+            `;
+        }
+    </script>
+</body>
+</html> 

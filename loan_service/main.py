@@ -19,6 +19,7 @@ def publish_event(event_type: str, payload: dict):
         connection = pika.BlockingConnection(pika.URLParameters(BROKER_URL))
         channel = connection.channel()
         channel.exchange_declare(exchange='loan_exchange', exchange_type='fanout', durable=True)
+        channel.queue_declare(queue='service_queue', durable=True)
         message = {"event_type": event_type, "data": payload}
         channel.basic_publish(
             exchange='loan_exchange',
