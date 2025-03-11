@@ -16,18 +16,27 @@ spec:
     spec:
       containers:
       - name: postgresql
-        image: postgres:14-alpine
+        image: postgres:latest
         ports:
         - containerPort: 5432
         env:
         - name: POSTGRES_DB
-          value: "loan_db"
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: database-name
         - name: POSTGRES_USER
-          value: "loan_user"
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: database-user
         - name: POSTGRES_PASSWORD
-          value: "loan_password"  # In production, use secrets
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: database-password
         volumeMounts:
-        - name: postgresql-data
+        - name: postgresql-persistent-storage
           mountPath: /var/lib/postgresql/data
         resources:
           requests:
@@ -36,7 +45,17 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "$(POSTGRES_USER)"]
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command: ["pg_isready", "-U", "$(POSTGRES_USER)"]
+          initialDelaySeconds: 30
+          periodSeconds: 20
       volumes:
-      - name: postgresql-data
+      - name: postgresql-persistent-storage
         persistentVolumeClaim:
           claimName: postgresql-pvc 
